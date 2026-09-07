@@ -1,9 +1,13 @@
+"""Database models for the News Application."""
+
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.db import models
 
 
 class User(AbstractUser):
+    """Custom user model with role-based access and subscriptions."""
+
     class Role(models.TextChoices):
         READER = "reader", "Reader"
         EDITOR = "editor", "Editor"
@@ -36,6 +40,8 @@ class User(AbstractUser):
 
 
 class Publisher(models.Model):
+    """Represents a publisher and its associated editors and journalists."""
+
     name = models.CharField(max_length=150, unique=True)
     description = models.TextField(blank=True)
     editors = models.ManyToManyField(
@@ -59,6 +65,8 @@ class Publisher(models.Model):
 
 
 class Article(models.Model):
+    """Represents a news article written by a journalist."""
+
     title = models.CharField(max_length=200)
     content = models.TextField()
     author = models.ForeignKey(
@@ -92,17 +100,25 @@ class Article(models.Model):
     def clean(self):
         super().clean()
         if not self.author:
-            raise ValidationError({"author": "A journalist must always author the article."})
+            raise ValidationError(
+                {"author": "A journalist must always author the article."}
+            )
         if self.author.role != User.Role.JOURNALIST:
-            raise ValidationError({"author": "Only journalists can author independent articles."})
+            raise ValidationError(
+                {"author": "Only journalists can author independent articles."}
+            )
         if self.approved and not self.approved_by:
-            raise ValidationError({"approved_by": "An approved article must have an editor."})
+            raise ValidationError(
+                {"approved_by": "An approved article must have an editor."}
+            )
 
     def __str__(self):
         return self.title
 
 
 class Newsletter(models.Model):
+    """Represents a newsletter containing published articles."""
+
     title = models.CharField(max_length=200)
     description = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
@@ -112,7 +128,11 @@ class Newsletter(models.Model):
         related_name="newsletters_published",
         limit_choices_to={"role": User.Role.JOURNALIST},
     )
-    articles = models.ManyToManyField(Article, blank=True, related_name="newsletters")
+    articles = models.ManyToManyField(
+        Article,
+        blank=True,
+        related_name="newsletters",
+    )
 
     class Meta:
         ordering = ["-created_at"]
@@ -120,13 +140,17 @@ class Newsletter(models.Model):
     def clean(self):
         super().clean()
         if self.author.role != User.Role.JOURNALIST:
-            raise ValidationError({"author": "Only journalists can create newsletters."})
+            raise ValidationError(
+                {"author": "Only journalists can create newsletters."}
+            )
 
     def __str__(self):
         return self.title
 
 
 class ApprovedArticleLog(models.Model):
+    """Stores information about an article after editor approval."""
+
     article = models.OneToOneField(Article, on_delete=models.CASCADE)
     received_at = models.DateTimeField(auto_now_add=True)
     payload = models.JSONField(default=dict)
