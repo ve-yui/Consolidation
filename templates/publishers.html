@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Publishers{% endblock %}
+{% block content %}
+<h1>Publisher Management</h1>
+<a class="button" href="{% url 'publisher_create' %}">Create Publisher</a>
+{% for publisher in publishers %}
+<div class="card">
+    <h2>{{ publisher.name }}</h2>
+    <p>{{ publisher.description }}</p>
+    <p><strong>Editors:</strong>
+        {% for editor in publisher.editors.all %}{{ editor.username }}{% if not forloop.last %}, {% endif %}{% empty %}None assigned{% endfor %}
+    </p>
+    <p><strong>Journalists:</strong>
+        {% for journalist in publisher.journalists.all %}{{ journalist.username }}{% if not forloop.last %}, {% endif %}{% empty %}None assigned{% endfor %}
+    </p>
+    <a class="button" href="{% url 'publisher_update' publisher.id %}">Edit</a>
+    <a class="button danger" href="{% url 'publisher_delete' publisher.id %}">Delete</a>
+</div>
+{% empty %}
+<p>No publishers have been created yet.</p>
+{% endfor %}
+{% endblock %}

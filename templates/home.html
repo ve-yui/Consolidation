@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}News Application{% endblock %}
+{% block content %}
+<h1>News Application</h1>
+
+{% if user.is_authenticated and user.role == "editor" %}
+<h2>Articles Awaiting Approval</h2>
+{% for article in pending_articles %}
+<div class="card">
+    <h3>{{ article.title }}</h3>
+    <p class="muted">
+        {% if article.author %}By {{ article.author.username }}{% endif %}
+        {% if article.publisher %}For {{ article.publisher.name }}{% endif %}
+    </p>
+    <p>{{ article.content }}</p>
+    <a class="button" href="{% url 'approve_article' article.id %}">Review / Approve</a>
+</div>
+{% empty %}
+<p>No articles are awaiting approval.</p>
+{% endfor %}
+{% endif %}
+
+<h2>Approved Articles</h2>
+{% for article in articles %}
+<div class="card">
+    <h3>{{ article.title }}</h3>
+    <p class="muted">
+        {% if article.author %}By journalist {{ article.author.username }}{% endif %}
+        {% if article.publisher %}Published by {{ article.publisher.name }}{% endif %}
+        · {{ article.created_at }}
+    </p>
+    <p>{{ article.content }}</p>
+
+    {% if user.role == "editor" %}
+        <a class="button" href="{% url 'article_update' article.id %}">Edit</a>
+        <a class="button danger" href="{% url 'article_delete' article.id %}">Delete</a>
+    {% elif user.role == "journalist" and article.author_id == user.id %}
+        <a class="button" href="{% url 'article_update' article.id %}">Edit</a>
+        <a class="button danger" href="{% url 'article_delete' article.id %}">Delete</a>
+    {% endif %}
+</div>
+{% empty %}
+<p>No approved articles yet.</p>
+{% endfor %}
+
+<h2>Newsletters</h2>
+{% for newsletter in newsletters %}
+<div class="card">
+    <h3>{{ newsletter.title }}</h3>
+    <p>{{ newsletter.description }}</p>
+    <p class="muted">Created by {{ newsletter.author.username }} · {{ newsletter.created_at }}</p>
+    {% if user.role == "editor" %}
+        <a class="button" href="{% url 'newsletter_update' newsletter.id %}">Edit</a>
+        <a class="button danger" href="{% url 'newsletter_delete' newsletter.id %}">Delete</a>
+    {% elif user.role == "journalist" and newsletter.author_id == user.id %}
+        <a class="button" href="{% url 'newsletter_update' newsletter.id %}">Edit</a>
+        <a class="button danger" href="{% url 'newsletter_delete' newsletter.id %}">Delete</a>
+    {% endif %}
+</div>
+{% empty %}
+<p>No newsletters yet.</p>
+{% endfor %}
+{% endblock %}
+
+{% if user.is_authenticated and user.role == "reader" %}
+<h2>Subscriptions</h2>
+<div class="card">
+    <h3>Publishers</h3>
+    {% for publisher in publishers %}
+        {% if publisher in user.subscriptions_to_publishers.all %}
+            <span>{{ publisher.name }} — subscribed</span>
+        {% else %}
+            <a class="button" href="{% url 'subscribe_publisher' publisher.id %}">Subscribe to {{ publisher.name }}</a>
+        {% endif %}
+        <br><br>
+    {% empty %}
+        <p>No publishers available.</p>
+    {% endfor %}
+    <h3>Journalists</h3>
+    {% for journalist in journalists %}
+        {% if journalist in user.subscriptions_to_journalists.all %}
+            <span>{{ journalist.username }} — subscribed</span>
+        {% else %}
+            <a class="button" href="{% url 'subscribe_journalist' journalist.id %}">Subscribe to {{ journalist.username }}</a>
+        {% endif %}
+        <br><br>
+    {% empty %}
+        <p>No journalists available.</p>
+    {% endfor %}
+</div>
+{% endif %}

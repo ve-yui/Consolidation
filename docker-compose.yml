@@ -1,0 +1,33 @@
+services:
+  db:
+    image: mariadb:11
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: news_db
+      MARIADB_USER: news_user
+      MARIADB_PASSWORD: news_password
+      MARIADB_ROOT_PASSWORD: root_password
+    volumes:
+      - mariadb_data:/var/lib/mysql
+
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      DB_NAME: news_db
+      DB_USER: news_user
+      DB_PASSWORD: news_password
+      DB_HOST: db
+      DB_PORT: "3306"
+      DJANGO_SECRET_KEY: "development-secret-key-change-me"
+      INTERNAL_API_KEY: "development-internal-key"
+      APPROVED_API_URL: "http://web:8000/api/approved/"
+    depends_on:
+      - db
+
+volumes:
+  mariadb_data:
