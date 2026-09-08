@@ -96,3 +96,10 @@ The test suite covers authentication, subscriptions, article creation/update/del
 ## MariaDB
 
 The project uses MariaDB when `DB_NAME` is supplied. SQLite is used as a convenient local fallback when no database environment variables are set.
+
+## Docker
+
+Build the Docker image:
+
+```bash
+docker build -t news-application .
