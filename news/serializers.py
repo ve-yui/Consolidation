@@ -38,3 +38,35 @@ class ArticleSerializer(serializers.ModelSerializer):
         article.full_clean()
         article.save()
         return article
+
+
+class NewsletterSerializer(serializers.ModelSerializer):
+    """Serialize newsletters and their approved articles."""
+
+    author = UserSerializer(read_only=True)
+    articles = serializers.PrimaryKeyRelatedField(
+        queryset=Article.objects.filter(approved=True),
+        many=True,
+        required=False,
+    )
+
+    class Meta:
+        model = Newsletter
+        fields = (
+            "id",
+            "title",
+            "description",
+            "created_at",
+            "author",
+            "articles",
+        )
+        read_only_fields = ("author", "created_at")
+
+    def create(self, validated_data):
+        request = self.context["request"]
+        articles = validated_data.pop("articles", [])
+        newsletter = Newsletter(author=request.user, **validated_data)
+        newsletter.full_clean()
+        newsletter.save()
+        newsletter.articles.set(articles)
+        return newsletter

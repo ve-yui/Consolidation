@@ -99,7 +99,18 @@ The project uses MariaDB when `DB_NAME` is supplied. SQLite is used as a conveni
 
 ## Docker
 
-Build the Docker image:
+This project includes a `docker-compose.yml` file that starts both the Django web service and the MariaDB database.
+
+Build the images and start the full environment:
 
 ```bash
-docker build -t news-application .
+docker compose up --build
+```
+
+Then open the application at `http://localhost:8000`.
+
+To stop the services, press `Ctrl+C` and run:
+
+```bash
+docker compose down
+```
